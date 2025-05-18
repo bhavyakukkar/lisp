@@ -4,9 +4,15 @@ pub enum Token {
     LP,
     /// Right Parenthesis i.e. `)`
     RP,
+    /// Quote i.e. `'`
+    Q,
+    /// Backquote i.e. `\``
+    BQ,
+    /// Comma i.e. `,`
+    C,
     /// Number i.e. `123` or `456.789`
     ///
-    /// Negative numbers need to be represented using expressions i.e. `(- 0 3)`
+    /// Negative numbers need to be represented using expressions i.e. `(- 3)`
     Number { whole: String, fraction: String },
     /// Symbols i.e. `a` or `A` or `_foo`
     Symbol(String),
@@ -41,6 +47,9 @@ impl Iterator for Lexer<'_> {
                 // Fresh character
                 ('(', None) => return Some(Ok(Token::LP)),
                 (')', None) => return Some(Ok(Token::RP)),
+                ('\'', None) => return Some(Ok(Token::Q)),
+                ('`', None) => return Some(Ok(Token::BQ)),
+                (',', None) => return Some(Ok(Token::C)),
                 (digit @ '0'..='9', None) => Some(Integer(digit.into())),
                 ('.', None) => Some(Float(String::new(), String::new())),
                 (' ' | '\t' | '\n' | '\r', None) => None,
@@ -74,7 +83,8 @@ impl Iterator for Lexer<'_> {
                 }
 
                 // Character while reading a symbol
-                ('(' | ')' | ' ' | '\t' | '\n' | '\r', Some(Symbol(name))) => {
+                | ('(' | ')' | '\'' | '`' | ',', Some(Symbol(name))) // Special characters
+                | (' ' | '\t' | '\n' | '\r', Some(Symbol(name))) => { // Ignored characters
                     self.source = previous_source;
                     return Some(Ok(Token::Symbol(name)));
                 }
