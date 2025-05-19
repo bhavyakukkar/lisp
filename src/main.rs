@@ -1,14 +1,17 @@
 // TODO: add strings maybe
-mod lexer;
 use std::{
     fs::File,
     io::{BufReader, Read},
 };
 
+mod lexer;
 pub use lexer::*;
 
 mod parser;
 pub use parser::*;
+
+mod eval;
+pub use eval::*;
 
 fn main() -> Result<(), std::io::Error> {
     let mut args = std::env::args();

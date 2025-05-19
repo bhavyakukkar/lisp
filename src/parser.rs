@@ -1,4 +1,4 @@
-use crate::lexer::Token;
+use crate::{eval, lexer::Token};
 
 #[derive(Debug)]
 pub enum Ast {
@@ -55,7 +55,7 @@ impl std::ops::Deref for QuoteState {
 
 #[derive(Debug)]
 pub struct Parser {
-    pub program: Vec<(Ast, QuoteState)>,
+    pub program: Vec<(eval::Ast, bool)>,
     stack: Vec<(
         Vec<(Ast, /* whether this cons is quoted */ QuoteState)>,
         /* whether this list is backquoted */ QuoteState,
@@ -74,11 +74,13 @@ impl Parser {
     }
 
     pub fn finish(self) -> Ast {
-        Ast::List(self.program)
+        // Ast::List(self.program)
+        todo!()
     }
 
     pub fn stack(&self) -> &Vec<(Vec<(Ast, QuoteState)>, QuoteState)> {
-        &self.stack
+        // &self.stack
+        todo!()
     }
 
     pub fn parse(&mut self, token: Token) -> Result<(), String> {
@@ -108,11 +110,14 @@ impl Parser {
             (Token::RP, QuoteState::Quote) => return Err(format!("`)` right after `'`")),
             (Token::RP, QuoteState::Backquote) => return Err(format!("`)` right after `\\``")),
 
-            (Token::C, _) => match self.quote_state {
-                QuoteState::None => todo!(),
-                QuoteState::Backquote => todo!(),
-                QuoteState::Quote => todo!(),
+            // TODO HERE: and comma is only allowed in list with backquote, and it basically makes the cons have no quote
+            // also logic to make every cons inside a backquoted list (single) quoted
+            (Token::C, QuoteState::None) => match self.stack.last() {
+                Some((_, QuoteState::Backquote)) => (),
+                _ => return Err("`,` can only be used in a list quoted with `\\``".to_string()),
             },
+            (Token::C, QuoteState::Quote) => return Err(format!("`,` right after `'`")),
+            (Token::C, QuoteState::Backquote) => return Err(format!("`,` right after `\\``")),
 
             (Token::Number { whole, fraction }, q) => {
                 match self.stack.last_mut() {
